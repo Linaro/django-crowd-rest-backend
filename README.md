@@ -40,24 +40,31 @@ How to use it
 
 - Adapt configuration settings for crowdrest in settings.py by adding
 	
-	**whether you want to sync django users from Crowd attributes**
-	`AUTH_CROWD_ALWAYS_UPDATE_USER = True`
+	_whether you want to sync django users from Crowd attributes_
+	
+		`AUTH_CROWD_ALWAYS_UPDATE_USER = True`
     
-	**Django user will get staff flag when Crowd user is in given Crowd group**
-	`AUTH_CROWD_STAFF_GROUP = 'staff'`
+	_Django user will get staff flag when Crowd user is in given Crowd group_
+	
+		`AUTH_CROWD_STAFF_GROUP = 'staff'`
     
-	**Django user will get superuser flag when Crowd user is in given Crowd group**
-	`AUTH_CROWD_SUPERUSER_GROUP = 'superuser'`
+	_Django user will get superuser flag when Crowd user is in given Crowd group_
+	
+		`AUTH_CROWD_SUPERUSER_GROUP = 'superuser'`
     
-	**crowdrest will use this username and password to connect to Crowd server**
-	`AUTH_CROWD_APPLICATION_USER = 'django'`
-	`AUTH_CROWD_APPLICATION_PASSWORD = 'django'`
+	_crowdrest will use this username and password to connect to Crowd server_
+	
+		`AUTH_CROWD_APPLICATION_USER = 'django'`
+	
+		`AUTH_CROWD_APPLICATION_PASSWORD = 'django'`
     
-	**URL to Crowd REST API**
-	`AUTH_CROWD_SERVER_REST_URI = 'http://127.0.0.1:8095/crowd/rest/usermanagement/latest'`
+	_URL to Crowd REST API_
+	
+		`AUTH_CROWD_SERVER_REST_URI = 'http://127.0.0.1:8095/crowd/rest/usermanagement/latest'`
     
-	**Use given certificate file to validate https connection to Crowd server**
-	`AUTH_CROWD_SERVER_TRUSTED_ROOT_CERTS_FILE = None`
+	_Use given certificate file to validate https connection to Crowd server_
+	
+		`AUTH_CROWD_SERVER_TRUSTED_ROOT_CERTS_FILE = None`
   
 Problems ?
 ==========
