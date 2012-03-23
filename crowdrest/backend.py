@@ -80,11 +80,11 @@ class CrowdRestBackend(object):
         "Try to authenticate given user and return a User instance on success."
         user = None
         try:
-            crowd_logger.debug("authenticate user '%s'..."%username)
+            crowd_logger.debug("Authenticate user %s..."%username)
             self.check_client_and_app_authentication()            
             self.crowdClient.authenticate( username, password )
             user = self.create_or_update_user(username)
-            crowd_logger.debug("authenticated user '%s'..."%user.username)
+            crowd_logger.debug("Authenticated user %s"%user.username)
         except:
             crowd_logger.exception("Authenticate failed")
         return user
@@ -207,7 +207,8 @@ class CrowdRestClient(object):
             authHandler = urllib2.HTTPBasicAuthHandler(password_mgr)
             handlers += [authHandler]
             
-            if crowd_settings.AUTH_CROWD_SERVER_TRUSTED_ROOT_CERTS_FILE:
+            if self._url.startswith('https') and crowd_settings.AUTH_CROWD_SERVER_TRUSTED_ROOT_CERTS_FILE:
+                crowd_logger.debug("Validating certificate with "+crowd_settings.AUTH_CROWD_SERVER_TRUSTED_ROOT_CERTS_FILE)
                 verifyHandler = VerifiedHTTPSHandler()
                 handlers += [verifyHandler]
             
@@ -219,7 +220,7 @@ class CrowdRestClient(object):
     def connect(self):
         "Connect to Crowd."
         try:
-            crowd_logger.debug("connecting to %s"%self._url)
+            crowd_logger.debug("Connecting to %s"%self._url)
             self._createOpener()
             
             # use the opener to fetch a dummy URL
@@ -227,7 +228,7 @@ class CrowdRestClient(object):
             i = fp.info()
             d = fp.read()
 
-            crowd_logger.debug("connected")
+            crowd_logger.debug("Connected")
         except:
             crowd_logger.exception("Failed to connect to Crowd")
             raise ClientException("Failed to connect to Crowd")
@@ -262,6 +263,7 @@ class CrowdRestClient(object):
     def get_user(self, username):
         "Query for given user and return dict of user fields from Crowd."
         try:
+            crowd_logger.debug("Fetching details of %s"%username)
             url = self._url+"/user.json?username=%s"%username
             u = self._opener.open(url)
             return json.loads(u.read())
@@ -272,6 +274,7 @@ class CrowdRestClient(object):
     def get_user_groups(self, username):
         "Query for groups of given user and return dict of group fields from Crowd."
         try:
+            crowd_logger.debug("Fetching groups of %s"%username)
             url = self._url+"/user/group/direct.json?username=%s"%username
             u = self._opener.open(url)
             return json.loads(u.read())
