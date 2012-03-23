@@ -6,8 +6,8 @@ using Crowd's REST API.
 
 It is inspired by the various forks of django-crowd-backend.
 Those implementations were always using SOUP.
-This one simple because it's just using REST API supported by Crowd. 
-See [Atlassian](https://developer.atlassian.com/display/CROWDDEV/Crowd+REST+APIs)
+This one is just using REST API supported by Crowd. 
+See [Atlassian](https://developer.atlassian.com/display/CROWDDEV/Crowd+REST+APIs).
 
 Current implementation
 ======================
