@@ -10,7 +10,7 @@ import logging.handlers
 
 crowd_logger = logging.getLogger(__name__)
 crowd_logger_handler = logging.StreamHandler()
-crowd_logger_handler.setFormatter( logging.Formatter("%(asctime)s %(levelname)s %(filename)s(%(lineno)d): %(message)s") )
+crowd_logger_handler.setFormatter( logging.Formatter("%(asctime)s %(levelname)s %(filename)s(%(lineno)d) %(funcName)s: %(message)s") )
 crowd_logger.addHandler( crowd_logger_handler )
 crowd_logger.setLevel( logging.DEBUG )
 crowd_logger.setLevel( logging.DEBUG )
@@ -34,6 +34,14 @@ class InvalidUser(UserException):
     
     def __str__(self):
         return "User '%s' is not valid Crowd user"%self.username
+
+
+class InactiveUser(UserException):
+    def __init__(self,username):
+        super(InactiveUser,self).__init__(username)
+    
+    def __str__(self):
+        return "User '%s' is not active"%self.username
 
 
 class AuthFailed(UserException):
@@ -80,11 +88,11 @@ class CrowdRestBackend(object):
         "Try to authenticate given user and return a User instance on success."
         user = None
         try:
-            crowd_logger.debug("Authenticate user %s..."%username)
+            crowd_logger.debug("Authenticate user '%s'..."%username)
             self.check_client_and_app_authentication()            
             self.crowdClient.authenticate( username, password )
             user = self.create_or_update_user(username)
-            crowd_logger.debug("Authenticated user %s"%user.username)
+            crowd_logger.debug("Authenticated user '%s'..."%user.username)
         except:
             crowd_logger.exception("Authenticate failed")
         return user
@@ -220,7 +228,7 @@ class CrowdRestClient(object):
     def connect(self):
         "Connect to Crowd."
         try:
-            crowd_logger.debug("Connecting to %s"%self._url)
+            crowd_logger.debug("Connecting to %s..."%self._url)
             self._createOpener()
             
             # use the opener to fetch a dummy URL
@@ -228,14 +236,15 @@ class CrowdRestClient(object):
             i = fp.info()
             d = fp.read()
 
-            crowd_logger.debug("Connected")
+            crowd_logger.debug("Connected to Crowd.")
         except:
             crowd_logger.exception("Failed to connect to Crowd")
             raise ClientException("Failed to connect to Crowd")
         
-    def authenticate(self, username=None, password=None):
+    def authenticate(self, username, password, maxRetry=3):
         "Authenticate given user via Crowd."
         try:
+            crowd_logger.debug("Authenticating '%s'..."%username)
             url = self._url+"/authentication?username="+username
             creds = { "value": password }
             req = urllib2.Request(url)
@@ -243,17 +252,22 @@ class CrowdRestClient(object):
             req.add_header("Content-Type","application/json")
             req.add_header("Accept","application/json")
             fp = self._opener.open(req)
-            data = json.load(fp)
+            usrData = json.load(fp)
+            if not usrData["active"]:
+                raise InactiveUser(username)
+            crowd_logger.debug("Authenticated '%s' successfully."%usrData["display-name"])
             return
         except urllib2.URLError, e:
-            data = json.load(e)
+            errData = json.load(e)
             if e.code==400:
-                if data["reason"] == "USER_NOT_FOUND":
+                if errData["reason"] == "USER_NOT_FOUND":
                     raise InvalidUser(username)
                 else:
-                    crowd_logger.exception("Unknown reason")
+                    crowd_logger.exception("Unknown reason %s"%errData["reason"])
             elif e.code==500:
                 crowd_logger.exception("Internal error on Crowd server")
+                if maxRetry>0:
+                    self.authenticate(username, password, maxRetry-1)
             else:
                 crowd_logger.exception("Unknown response")
         except:
@@ -263,7 +277,7 @@ class CrowdRestClient(object):
     def get_user(self, username):
         "Query for given user and return dict of user fields from Crowd."
         try:
-            crowd_logger.debug("Fetching details of %s"%username)
+            crowd_logger.debug("Fetching details of '%s'..."%username)
             url = self._url+"/user.json?username=%s"%username
             u = self._opener.open(url)
             return json.loads(u.read())
@@ -274,7 +288,7 @@ class CrowdRestClient(object):
     def get_user_groups(self, username):
         "Query for groups of given user and return dict of group fields from Crowd."
         try:
-            crowd_logger.debug("Fetching groups of %s"%username)
+            crowd_logger.debug("Fetching groups of '%s'..."%username)
             url = self._url+"/user/group/direct.json?username=%s"%username
             u = self._opener.open(url)
             return json.loads(u.read())
