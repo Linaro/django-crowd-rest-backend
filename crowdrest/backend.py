@@ -36,12 +36,7 @@ class InvalidUser(UserException):
         return "User '%s' is not valid Crowd user"%self.username
 
 
-class InactiveUser(UserException):
-    def __init__(self,username):
-        super(InactiveUser,self).__init__(username)
     
-    def __str__(self):
-        return "User '%s' is not active"%self.username
 
 
 class AuthFailed(UserException):
@@ -92,7 +87,7 @@ class CrowdRestBackend(object):
             self.check_client_and_app_authentication()            
             self.crowdClient.authenticate( username, password )
             user = self.create_or_update_user(username)
-            crowd_logger.debug("Authenticated user '%s'..."%user.username)
+            crowd_logger.debug("Authenticated user '%s' successfully."%user.username)
         except:
             crowd_logger.exception("Authenticate failed")
         return user
@@ -253,8 +248,6 @@ class CrowdRestClient(object):
             req.add_header("Accept","application/json")
             fp = self._opener.open(req)
             usrData = json.load(fp)
-            if not usrData["active"]:
-                raise InactiveUser(username)
             crowd_logger.debug("Authenticated '%s' successfully."%usrData["display-name"])
             return
         except urllib2.URLError, e:
