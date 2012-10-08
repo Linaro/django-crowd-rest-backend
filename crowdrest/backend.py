@@ -36,9 +36,6 @@ class InvalidUser(UserException):
         return "User '%s' is not valid Crowd user"%self.username
 
 
-    
-
-
 class AuthFailed(UserException):
     def __init__(self,username):
         super(AuthFailed,self).__init__(username)
@@ -233,11 +230,16 @@ class CrowdRestClient(object):
 
             crowd_logger.debug("Connected to Crowd.")
         except:
+            self._opener = None
             crowd_logger.exception("Failed to connect to Crowd")
             raise ClientException("Failed to connect to Crowd")
         
     def authenticate(self, username, password, maxRetry=3):
         "Authenticate given user via Crowd."
+        if not self._opener:
+            crowd_logger.debug("Crowd not available !? Failed to authenticate '%s'"%username)
+            raise AuthFailed(username)
+
         try:
             crowd_logger.debug("Authenticating '%s'..."%username)
             url = self._url+"/authentication?username="+username
@@ -261,10 +263,13 @@ class CrowdRestClient(object):
                 crowd_logger.exception("Internal error on Crowd server")
                 if maxRetry>0:
                     self.authenticate(username, password, maxRetry-1)
+                    return
             else:
                 crowd_logger.exception("Unknown response")
         except:
             crowd_logger.exception("Unknown exception")
+        
+        # Force auth to fail
         raise AuthFailed(username)
 
     def get_user(self, username):
