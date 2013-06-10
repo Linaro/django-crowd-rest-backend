@@ -129,11 +129,8 @@ class CrowdSettings(object):
     """
     defaults = {
         'AUTH_CROWD_ALWAYS_UPDATE_USER':             True,
-        'AUTH_CROWD_STAFF_GROUP':                    'staff',
-        'AUTH_CROWD_SUPERUSER_GROUP':                'superuser',
-        'AUTH_CROWD_APPLICATION_USER':               'django',
-        'AUTH_CROWD_APPLICATION_PASSWORD':           'django',
-        'AUTH_CROWD_SERVER_REST_URI':                'http://127.0.0.1:8095/crowd/rest/usermanagement/latest',
+        'AUTH_CROWD_STAFF_GROUP':                    None,
+        'AUTH_CROWD_SUPERUSER_GROUP':                None,
         'AUTH_CROWD_SERVER_TRUSTED_ROOT_CERTS_FILE': None,
     }
 
