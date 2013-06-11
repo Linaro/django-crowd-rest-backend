@@ -58,6 +58,8 @@ How to use it
 	_Django user will get superuser flag when Crowd user is in given Crowd group_
 	
 		AUTH_CROWD_SUPERUSER_GROUP = 'superuser'
+	Note that superuser group member does not imply staff membership and vice
+	versa (make sure you read Django docs to understand the difference).
     
 	_crowdrest will use this username and password to connect to Crowd server_
 	

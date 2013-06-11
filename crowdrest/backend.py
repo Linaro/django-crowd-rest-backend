@@ -114,10 +114,13 @@ class CrowdRestBackend(object):
         user.groups = group_objs
 
         if crowd_settings.AUTH_CROWD_SUPERUSER_GROUP in group_names:
-            user.is_staff     = True
             user.is_superuser = True
+        else:
+            user.is_superuser = False
         if crowd_settings.AUTH_CROWD_STAFF_GROUP in group_names:
             user.is_staff = True
+        else:
+            user.is_staff = False
 
     def get_user(self, user_id):
         "Return User instance of given identifier."
