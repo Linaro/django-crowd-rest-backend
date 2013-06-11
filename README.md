@@ -43,6 +43,13 @@ How to use it
 	_whether you want to sync django users from Crowd attributes_
 	
 		AUTH_CROWD_ALWAYS_UPDATE_USER = True
+
+	_whether you want to sync django groups from Crowd groups_
+
+		AUTH_CROWD_ALWAYS_UPDATE_GROUPS = True
+	If you use any form of group-based autorization/permission checking,
+	you'd rather have this as True (default). In particular, AUTH_CROWD_STAFF_GROUP
+	& AUTH_CROWD_SUPERUSER_GROUP settings depend on this.
     
 	_Django user will get staff flag when Crowd user is in given Crowd group_
 	

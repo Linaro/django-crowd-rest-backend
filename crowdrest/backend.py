@@ -71,6 +71,10 @@ class CrowdRestBackend(object):
             self.sync(user)
             saveUser = True
 
+        if crowd_settings.AUTH_CROWD_ALWAYS_UPDATE_GROUPS:
+            self.sync_groups(user)
+            saveUser = True
+
         if saveUser:
             user.save()
             
@@ -100,17 +104,21 @@ class CrowdRestBackend(object):
             user.email = usrData["email"]
         if "active" in usrData:
             user.is_active = usrData["active"]
-        
-        grpData = self.crowdClient.get_user_groups(user.username)
-        for grp in grpData["groups"]:
-            if "name" in grp:
-                grpName = grp["name"]
-                if grpName == crowd_settings.AUTH_CROWD_SUPERUSER_GROUP:
-                    user.is_staff     = True
-                    user.is_superuser = True
-                if grpName == crowd_settings.AUTH_CROWD_STAFF_GROUP:
-                    user.is_staff = True
-    
+
+    def sync_groups(self, user):
+        data = self.crowdClient.get_user_groups(user.username)
+
+        group_names = [x["name"] for x in data["groups"]]
+
+        group_objs = [Group.objects.get_or_create(name=g)[0] for g in group_names]
+        user.groups = group_objs
+
+        if crowd_settings.AUTH_CROWD_SUPERUSER_GROUP in group_names:
+            user.is_staff     = True
+            user.is_superuser = True
+        if crowd_settings.AUTH_CROWD_STAFF_GROUP in group_names:
+            user.is_staff = True
+
     def get_user(self, user_id):
         "Return User instance of given identifier."
         user = None
@@ -129,6 +137,7 @@ class CrowdSettings(object):
     """
     defaults = {
         'AUTH_CROWD_ALWAYS_UPDATE_USER':             True,
+        'AUTH_CROWD_ALWAYS_UPDATE_GROUPS'            True,
         'AUTH_CROWD_STAFF_GROUP':                    None,
         'AUTH_CROWD_SUPERUSER_GROUP':                None,
         'AUTH_CROWD_SERVER_TRUSTED_ROOT_CERTS_FILE': None,
