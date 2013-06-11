@@ -293,7 +293,7 @@ class CrowdRestClient(object):
         "Query for groups of given user and return dict of group fields from Crowd."
         try:
             crowd_logger.debug("Fetching groups of '%s'..."%username)
-            url = self._url+"/user/group/direct.json?username=%s"%username
+            url = self._url+"/user/group/nested.json?username=%s"%username
             u = self._opener.open(url)
             return json.loads(u.read())
         except urllib2.URLError, e:
