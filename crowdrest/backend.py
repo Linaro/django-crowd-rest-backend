@@ -111,10 +111,7 @@ class CrowdRestBackend(object):
     def sync_groups(self, user):
         data = self.crowdClient.get_user_groups(user.username)
 
-        group_names = [x["name"] for x in data["groups"]]
-
-        group_objs = [Group.objects.get_or_create(name=g)[0] for g in group_names]
-        user.groups = group_objs
+        group_names = set([x["name"] for x in data["groups"]])
 
         if getattr(settings, "AUTH_CROWD_SUPERUSER_GROUP", None) in group_names:
             user.is_superuser = True
@@ -124,6 +121,14 @@ class CrowdRestBackend(object):
             user.is_staff = True
         else:
             user.is_staff = False
+
+        if getattr(settings, "AUTH_CROWD_CREATE_GROUPS", False):
+            group_objs = [Group.objects.get_or_create(name=g)[0] for g in group_names]
+        else:
+            group_objs = Group.objects.all()
+            group_objs = filter(lambda x: x.name in group_names, group_objs)
+
+        user.groups = group_objs
 
     def get_user(self, user_id):
         "Return User instance of given identifier."

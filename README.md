@@ -50,6 +50,20 @@ How to use it
 	If you use any form of group-based autorization/permission checking,
 	you'd rather have this as True (default). In particular, AUTH_CROWD_STAFF_GROUP
 	& AUTH_CROWD_SUPERUSER_GROUP settings depend on this.
+
+	_whether you want to sync all user's Crowd groups into Django_
+
+		AUTH_CROWD_CREATE_GROUPS = False
+	This setting is considered only if AUTH_CROWD_ALWAYS_UPDATE_GROUPS = True. If
+	this is True, then all user's groups in Crowd will be synced to Django (so,
+	effectively, you'll be able to check Crowd group memberships using Django API).
+	If set to False (default), no groups will be created by backend, and only groups
+	already existing in Django will be considered (i.e. user group membership in
+	Django will be updated to intersection of user's Crowd groups and all available
+	Django groups).
+	
+	you'd rather have this as True (default). In particular, AUTH_CROWD_STAFF_GROUP
+	& AUTH_CROWD_SUPERUSER_GROUP settings depend on this.
     
 	_Django user will get staff flag when Crowd user is in given Crowd group_
 	
