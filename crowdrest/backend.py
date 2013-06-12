@@ -8,6 +8,9 @@ import json
 import logging
 import logging.handlers
 
+from django.conf import settings
+
+
 crowd_logger = logging.getLogger(__name__)
 crowd_logger_handler = logging.StreamHandler()
 crowd_logger_handler.setFormatter( logging.Formatter("%(asctime)s %(levelname)s %(filename)s(%(lineno)d) %(funcName)s: %(message)s") )
@@ -67,11 +70,11 @@ class CrowdRestBackend(object):
             user.set_unusable_password()
             saveUser = True
         
-        if crowd_settings.AUTH_CROWD_ALWAYS_UPDATE_USER:
+        if getattr(settings, "AUTH_CROWD_ALWAYS_UPDATE_USER", True):
             self.sync(user)
             saveUser = True
 
-        if crowd_settings.AUTH_CROWD_ALWAYS_UPDATE_GROUPS:
+        if getattr(settings, "AUTH_CROWD_ALWAYS_UPDATE_GROUPS", True):
             self.sync_groups(user)
             saveUser = True
 
@@ -113,11 +116,11 @@ class CrowdRestBackend(object):
         group_objs = [Group.objects.get_or_create(name=g)[0] for g in group_names]
         user.groups = group_objs
 
-        if crowd_settings.AUTH_CROWD_SUPERUSER_GROUP in group_names:
+        if getattr(settings, "AUTH_CROWD_SUPERUSER_GROUP", None) in group_names:
             user.is_superuser = True
         else:
             user.is_superuser = False
-        if crowd_settings.AUTH_CROWD_STAFF_GROUP in group_names:
+        if getattr(settings, "AUTH_CROWD_STAFF_GROUP", None) in group_names:
             user.is_staff = True
         else:
             user.is_staff = False
@@ -130,34 +133,6 @@ class CrowdRestBackend(object):
         except User.DoesNotExist:
             crowd_logger.exception("User not found")
         return user
-
-
-class CrowdSettings(object):
-    """
-    This is a simple class to take the place of the global settings object. An
-    instance will contain all of our settings as attributes, with default values
-    if they are not specified by the configuration.
-    """
-    defaults = {
-        'AUTH_CROWD_ALWAYS_UPDATE_USER':             True,
-        'AUTH_CROWD_ALWAYS_UPDATE_GROUPS'            True,
-        'AUTH_CROWD_STAFF_GROUP':                    None,
-        'AUTH_CROWD_SUPERUSER_GROUP':                None,
-        'AUTH_CROWD_SERVER_TRUSTED_ROOT_CERTS_FILE': None,
-    }
-
-    def __init__(self):
-        """
-        Loads our settings from django.conf.settings, applying defaults for any
-        that are omitted.
-        """
-        from django.conf import settings
-
-        for name, default in self.defaults.iteritems():
-            value = getattr(settings, name, default)
-            setattr(self, name, value)
-
-crowd_settings = CrowdSettings()
 
 
 #########################################################################
@@ -176,7 +151,7 @@ class VerifiedHTTPSConnection(httplib.HTTPSConnection):
                                     self.key_file,
                                     self.cert_file,
                                     cert_reqs=ssl.CERT_REQUIRED,
-                                    ca_certs=crowd_settings.AUTH_CROWD_SERVER_TRUSTED_ROOT_CERTS_FILE)
+                                    ca_certs=getattr(settings, "AUTH_CROWD_SERVER_TRUSTED_ROOT_CERTS_FILE", None))
 
 # wraps https connections with ssl certificate verification
 class VerifiedHTTPSHandler(urllib2.HTTPSHandler):
@@ -195,7 +170,7 @@ class CrowdRestClient(object):
     def __init__(self):
         try:
             self._opener = None
-            self._url    = crowd_settings.AUTH_CROWD_SERVER_REST_URI
+            self._url    = settings.AUTH_CROWD_SERVER_REST_URI
             self.connect()
         except:
             crowd_logger.exception("Initialize Crowd client failed")
@@ -211,13 +186,14 @@ class CrowdRestClient(object):
             # Add the username and password.
             # If we knew the realm, we could use it instead of None.
             password_mgr.add_password( None, self._url,
-                                       crowd_settings.AUTH_CROWD_APPLICATION_USER,
-                                       crowd_settings.AUTH_CROWD_APPLICATION_PASSWORD )
+                                       settings.AUTH_CROWD_APPLICATION_USER,
+                                       settings.AUTH_CROWD_APPLICATION_PASSWORD )
             authHandler = urllib2.HTTPBasicAuthHandler(password_mgr)
             handlers += [authHandler]
             
-            if self._url.startswith('https') and crowd_settings.AUTH_CROWD_SERVER_TRUSTED_ROOT_CERTS_FILE:
-                crowd_logger.debug("Validating certificate with "+crowd_settings.AUTH_CROWD_SERVER_TRUSTED_ROOT_CERTS_FILE)
+            certs = getattr(settings, "AUTH_CROWD_SERVER_TRUSTED_ROOT_CERTS_FILE", None)
+            if self._url.startswith('https') and certs:
+                crowd_logger.debug("Validating certificate with " + certs)
                 verifyHandler = VerifiedHTTPSHandler()
                 handlers += [verifyHandler]
             
