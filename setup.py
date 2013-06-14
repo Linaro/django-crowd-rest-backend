@@ -18,6 +18,6 @@ setup(
     zip_safe=True,
     packages=['crowdrest'],
     # dependencies
-    install_requires=['django >= 1.3'],
+    install_requires=['django >= 1.2'],
     setup_requires=['versiontools >= 1.3.1'],
 )
